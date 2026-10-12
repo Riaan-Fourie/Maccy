@@ -1,0 +1,49 @@
+# Builds the patched Maccy that Riaan runs (Jarvis #629). Ad-hoc signed, because
+# this fork has no Developer ID. The update feed (SUFeedURL in Maccy/Info.plist)
+# points at this branch's appcast.xml, so an official release can't silently
+# replace the patch.
+name: Build patched Maccy
+
+on:
+  push:
+    branches: [fix/629-modified-keeps-new-title]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      SIGNING: CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER=
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode
+        run: xcodebuild -version
+
+      - name: Test history
+        run: |
+          xcodebuild test -project Maccy.xcodeproj -scheme Maccy \
+            -destination 'platform=macOS' -only-testing:MaccyTests/HistoryTests $SIGNING
+
+      - name: Build
+        run: |
+          xcodebuild build -project Maccy.xcodeproj -scheme Maccy -configuration Release \
+            -destination 'generic/platform=macOS' -derivedDataPath build \
+            MARKETING_VERSION=2.7.1-629 $SIGNING
+
+      - name: Package
+        run: |
+          APP=build/Build/Products/Release/Maccy.app
+          codesign --verify --deep --strict "$APP"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" -c "Print :SUFeedURL" "$APP/Contents/Info.plist"
+          ditto -c -k --keepParent "$APP" Maccy-2.7.1-629.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Maccy-2.7.1-629
+          path: Maccy-2.7.1-629.zip
+          retention-days: 90
