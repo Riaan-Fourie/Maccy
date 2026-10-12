@@ -175,6 +175,9 @@ class HistoryTests: XCTestCase {
 
     XCTAssertEqual(history.items, [modifiedItemDecorator])
     XCTAssertEqual(history.items[0].text, "bar")
+    // The replacing item keeps its own title: the old one described text
+    // that is no longer in the entry.
+    XCTAssertEqual(history.items[0].item.title, "bar")
   }
 
   func testClearingUnpinned() {

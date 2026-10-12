@@ -147,11 +147,11 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
     if let existingHistoryItem = findSimilarItem(item) {
       if isModified(item) == nil {
         item.contents = existingHistoryItem.contents
+        item.title = existingHistoryItem.title
       }
       item.firstCopiedAt = existingHistoryItem.firstCopiedAt
       item.numberOfCopies += existingHistoryItem.numberOfCopies
       item.pin = existingHistoryItem.pin
-      item.title = existingHistoryItem.title
       if !item.fromMaccy {
         item.application = existingHistoryItem.application
       }
